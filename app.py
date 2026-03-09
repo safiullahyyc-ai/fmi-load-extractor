@@ -4,10 +4,7 @@ import requests
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
-import os
-# Support index.html in either root or static/ folder
-_static = "static" if os.path.exists("static/index.html") else "."
-app = Flask(__name__, static_folder=_static)
+app = Flask(__name__)
 CORS(app)
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
@@ -78,7 +75,14 @@ Generate 3-10 questions total."""
 
 @app.route("/")
 def index():
-    return send_from_directory("static", "index.html")
+    # Try static/ folder first, then root
+    if os.path.exists(os.path.join(app.root_path, "static", "index.html")):
+        return send_from_directory(os.path.join(app.root_path, "static"), "index.html")
+    # Fall back to any html file in root
+    for name in ["index.html", "index (5).html"]:
+        if os.path.exists(os.path.join(app.root_path, name)):
+            return send_from_directory(app.root_path, name)
+    return "App is running but index.html not found", 200
 
 
 @app.route("/api/extract", methods=["POST"])
@@ -122,5 +126,5 @@ def extract():
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)
