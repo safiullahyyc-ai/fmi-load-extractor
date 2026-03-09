@@ -75,14 +75,20 @@ Generate 3-10 questions total."""
 
 @app.route("/")
 def index():
-    # Try static/ folder first, then root
-    if os.path.exists(os.path.join(app.root_path, "static", "index.html")):
-        return send_from_directory(os.path.join(app.root_path, "static"), "index.html")
-    # Fall back to any html file in root
-    for name in ["index.html", "index (5).html"]:
-        if os.path.exists(os.path.join(app.root_path, name)):
-            return send_from_directory(app.root_path, name)
-    return "App is running but index.html not found", 200
+    root = app.root_path
+    # Check all possible locations
+    for folder, filename in [
+        ("static", "index.html"),
+        (".", "index.html"),
+        (".", "index (5).html"),
+    ]:
+        path = os.path.join(root, folder, filename)
+        if os.path.exists(path):
+            return send_from_directory(os.path.join(root, folder), filename)
+    # Debug: list what files exist
+    files = os.listdir(root)
+    static_files = os.listdir(os.path.join(root, "static")) if os.path.exists(os.path.join(root, "static")) else []
+    return f"index.html not found. Root files: {files}. Static files: {static_files}", 200
 
 
 @app.route("/api/extract", methods=["POST"])
