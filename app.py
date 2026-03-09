@@ -4,7 +4,10 @@ import requests
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
-app = Flask(__name__, static_folder="static")
+import os
+# Support index.html in either root or static/ folder
+_static = "static" if os.path.exists("static/index.html") else "."
+app = Flask(__name__, static_folder=_static)
 CORS(app)
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
